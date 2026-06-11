@@ -1,0 +1,3 @@
+([('myDownloader',
+   '/Users/johnmccullagh/Desktop/python/dist/myDownloader',
+   'EXECUTABLE')],)
