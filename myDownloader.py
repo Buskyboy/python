@@ -16,6 +16,8 @@ class windowclass(wx.Frame):
     def InitUI(self):
         panel = wx.Panel(self)
         panel.border = 10
+        #panel.Style.border:wx.BORDER_SIMPLE
+        #panel.SetBackgroundColour(wx.Colour(200, 255, 110)) 
       
         vbox = wx.BoxSizer(wx.VERTICAL)
 

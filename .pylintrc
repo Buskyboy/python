@@ -1,0 +1,10 @@
+[MASTER]
+# Allow C-extension packages (wxPython) to be treated as extension packages
+extension-pkg-whitelist=wx
+
+[TYPECHECK]
+# Recognize members generated at runtime by wx
+generated-members=wx.*
+
+[MESSAGES CONTROL]
+# Keep default message settings; no global disables here.
