@@ -1,5 +1,6 @@
 import os
 import threading
+from charset_normalizer import from_path
 import wx
 import yt_dlp
 btnText = "Download"
@@ -12,12 +13,10 @@ class windowclass(wx.Frame):
       
       
         self.InitUI()   
-    
+   
     def InitUI(self):
         panel = wx.Panel(self)
         panel.border = 10
-        #panel.Style.border:wx.BORDER_SIMPLE
-        #panel.SetBackgroundColour(wx.Colour(200, 255, 110)) 
       
         vbox = wx.BoxSizer(wx.VERTICAL)
 
@@ -51,8 +50,20 @@ class windowclass(wx.Frame):
 
         self.status_text = wx.StaticText(panel, label="", style=wx.ALIGN_LEFT)
         vbox.Add(self.status_text, flag=wx.EXPAND|wx.LEFT|wx.TOP, border=10)
+
+
+         # 1. Instantiate the progress bar widget
+        self.gauge = wx.Gauge(panel, range=100, size=(250, 60)) 
+        vbox.Add(self.gauge, 0,wx.EXPAND|wx.ALL, 10)
         
         panel.SetSizer(vbox)
+
+        #status bar
+
+        self.sb=self.CreateStatusBar()
+   
+
+
 
     def on_browse_folder(self, event):
         dialog = wx.DirDialog(self, "Choose download folder", defaultPath=self.save_dir, style=wx.DD_DEFAULT_STYLE)
@@ -63,7 +74,8 @@ class windowclass(wx.Frame):
 
     def clear_text(self, event):
         self.text_ctrl.SetValue("")  # Clear the text control
-        self.status_text.SetLabel("")  # Clear the status message
+        #self.status_text.SetLabel("")  # Clear the status message
+        self.sb.SetStatusText("")
     
 
     def load_and_download(self, event):
@@ -72,34 +84,67 @@ class windowclass(wx.Frame):
             self.status_text.SetLabel("You must enter a URL.")
             return
 
-        self.status_text.SetLabel("Downloading..."+ "\n")
-        self.status_text.Refresh()
-        self.status_text.Update()
+        #self.status_text.SetLabel("Downloading..."+ "\n")
+        self.sb.SetStatusText(" Downloading...")
+        self.sb.Refresh()   
+        self.sb.Update()
+        #self.status_text.Refresh()
+        #self.status_text.Update()
 
         download_thread = threading.Thread(target=self.download_video, args=(video_url,), daemon=True)
         download_thread.start()
 
+    
+
     def download_video(self, video_url):
         filename_template = os.path.join(self.save_dir, '%(title)s.%(ext)s')
-        ydl_opts = {
+
+        def custom_hook(d):
+            if d['status'] == 'downloading':
+                # Extract progress metrics
+                total = d.get('total_bytes') or d.get('total_bytes_estimate') or 0
+                downloaded = d.get('downloaded_bytes', 0)
+                
+                if total > 0:
+                    percent = downloaded / total * 100
+                    # Create a 30-character wide bar
+                    bar_length = 30
+                    filled_length = int(bar_length * downloaded // total)
+                    bar = '█' * filled_length + '-' * (bar_length - filled_length)
+                    
+                    # Print over the exact same line using \r
+                    print(f"\rDownloading: |{bar}| {percent:.1f}% Complete", end='')
+            
+            elif d['status'] == 'finished':
+                print("\nDownload finished! Packaging file...")
+        
+      
+        ydl_opts ={
             # Use a single best format so ffmpeg is not required for merging.
             'format': 'best',
             'outtmpl': filename_template,
             'noplaylist': True,
+            'progress_hooks': [custom_hook],
+            #'quiet': True, # Suppress yt-dlp's default noisy terminal output
+            
         }
 
         try:
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 ydl.download([video_url])
+               
+            
             wx.CallAfter(self.on_download_complete, True, "Download completed successfully!")
         except Exception as e:
             wx.CallAfter(self.on_download_complete, False, f"An error occurred: {e}")
 
     def on_download_complete(self, success, message):
         if success:
-            self.status_text.SetLabel(message)
+            #self.status_text.SetLabel(message)
+            self.sb.SetStatusText(message)
         else:
-            self.status_text.SetLabel("Download failed.")
+            #self.status_text.SetLabel("Download failed.")
+            self.sb.SetStatusText("Download failed.")
             wx.MessageBox(message, "Error", wx.OK | wx.ICON_ERROR)
 
 
@@ -107,7 +152,7 @@ class windowclass(wx.Frame):
 if __name__ == '__main__':        
 
     app = wx.App()
-    frame = windowclass(None, title='YouTube Downloader', size=(500, 250))
+    frame = windowclass(None, title='YouTube Downloader', size=(500, 300))
     frame.Show()
     frame.Center()
     app.MainLoop()       
