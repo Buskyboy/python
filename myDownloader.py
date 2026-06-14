@@ -74,7 +74,6 @@ class windowclass(wx.Frame):
 
     def clear_text(self, event):
         self.text_ctrl.SetValue("")  # Clear the text control
-        #self.status_text.SetLabel("")  # Clear the status message
         self.sb.SetStatusText("")
     
 
@@ -84,12 +83,9 @@ class windowclass(wx.Frame):
             self.sb.SetStatusText("Error: You must enter a URL.")
             return
 
-        #self.status_text.SetLabel("Downloading..."+ "\n")
         self.sb.SetStatusText(" Downloading...")
         self.sb.Refresh()   
         self.sb.Update()
-        #self.status_text.Refresh()
-        #self.status_text.Update()
 
         download_thread = threading.Thread(target=self.download_video, args=(video_url,), daemon=True)
         download_thread.start()
