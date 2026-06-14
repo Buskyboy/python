@@ -1,6 +1,5 @@
 import os
 import threading
-from charset_normalizer import from_path
 import wx
 import yt_dlp
 btnText = "Download"
@@ -46,15 +45,21 @@ class windowclass(wx.Frame):
         hbox.Add(download_button, 1, wx.EXPAND|wx.ALL, 10)
         hbox.Add(clear_button, 0, wx.EXPAND|wx.ALL, 10)
 
-        vbox.Add(hbox, flag=wx.ALIGN_CENTER|wx.TOP, border=20)
+        vbox.Add(hbox, flag=wx.ALIGN_CENTER|wx.TOP, border=0)
 
         self.status_text = wx.StaticText(panel, label="", style=wx.ALIGN_LEFT)
-        vbox.Add(self.status_text, flag=wx.EXPAND|wx.LEFT|wx.TOP, border=10)
+        vbox.Add(self.status_text, flag=wx.EXPAND|wx.LEFT|wx.TOP, border=0)
 
 
-         # 1. Instantiate the progress bar widget
-        self.gauge = wx.Gauge(panel, range=100, size=(250, 60)) 
-        vbox.Add(self.gauge, 0,wx.EXPAND|wx.ALL, 10)
+         # 1. Instantiate the progress bar widget and its label
+        self.gauge_label = wx.StaticText(panel, label="0%")
+        self.gauge = wx.Gauge(panel, range=100, size=(250, 0)) 
+
+        gauge_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        gauge_hbox.Add(self.gauge_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 10)
+        gauge_hbox.Add(self.gauge, 1, wx.EXPAND)
+
+        vbox.Add(gauge_hbox, 0, wx.EXPAND | wx.LEFT | wx.RIGHT, 35)
         
         panel.SetSizer(vbox)
 
@@ -107,16 +112,15 @@ class windowclass(wx.Frame):
                 
                 if total > 0:
                     percent = downloaded / total * 100
-                    # Create a 30-character wide bar
-                    bar_length = 30
-                    filled_length = int(bar_length * downloaded // total)
-                    bar = '█' * filled_length + '-' * (bar_length - filled_length)
-                    
-                    # Print over the exact same line using \r
-                    print(f"\rDownloading: |{bar}| {percent:.1f}% Complete", end='')
+                    # Update the GUI progress bar safely from the background thread
+                    # Update the GUI progress bar and label safely from the background thread
+                    wx.CallAfter(self.gauge.SetValue, int(percent))
+                    wx.CallAfter(self.gauge_label.SetLabel, f"{int(percent)}%")
             
             elif d['status'] == 'finished':
-                print("\nDownload finished! Packaging file...")
+                wx.CallAfter(self.gauge.SetValue, 100)
+                wx.CallAfter(self.gauge_label.SetLabel, "100%")
+                print("Download finished! Packaging file...")
         
       
         ydl_opts ={
@@ -139,6 +143,10 @@ class windowclass(wx.Frame):
             wx.CallAfter(self.on_download_complete, False, f"An error occurred: {e}")
 
     def on_download_complete(self, success, message):
+        # Reset progress bar for the next task
+        self.gauge.SetValue(0)
+        self.gauge_label.SetLabel("0%")
+        
         if success:
             #self.status_text.SetLabel(message)
             self.sb.SetStatusText(message)
@@ -152,7 +160,7 @@ class windowclass(wx.Frame):
 if __name__ == '__main__':        
 
     app = wx.App()
-    frame = windowclass(None, title='YouTube Downloader', size=(500, 300))
+    frame = windowclass(None, title='YouTube Downloader', size=(500, 275))
     frame.Show()
     frame.Center()
     app.MainLoop()       
