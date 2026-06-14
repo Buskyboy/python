@@ -28,14 +28,12 @@ jobs:
         pip install -r requirements.txt
 
  
-
     - name: Build Executable with PyInstaller
       run: |
-        pyinstaller -y --onedir --windowed --icon=downloading.ico  --osx-bundle-identifier=com.youtube-downloader myDownloader.py
-
+        pyinstaller -y --onefile --windowed --icon=downloading.ico myDownloader.py
 
     - name: Upload Executable Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: myDownloader.exe
-        path: dist/myDownLoader.exe
+        name: myDownloader-windows
+        path: dist/myDownloader.exe
