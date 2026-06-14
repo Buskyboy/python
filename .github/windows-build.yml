@@ -31,7 +31,8 @@ jobs:
 
     - name: Build Executable with PyInstaller
       run: |
-        pyinstaller --onefile --icon=downloading.ico --windowed myDownloader.py
+        pyinstaller -y --onedir --windowed --icon=downloading.icns --osx-bundle-identifier=com.youtube-downloader myDownloader.py
+
 
     - name: Upload Executable Artifact
       uses: actions/upload-artifact@v4
