@@ -31,7 +31,7 @@ jobs:
 
     - name: Build Executable with PyInstaller
       run: |
-        pyinstaller -y --onedir --windowed --icon=downloading.ios  myDownloader.py
+        pyinstaller -y --onedir --windowed --icon=downloading.ico myDownloader.py
 
 
     - name: Upload Executable Artifact
