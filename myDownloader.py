@@ -15,7 +15,6 @@ class windowclass(wx.Frame):
    
     def InitUI(self):
         panel = wx.Panel(self)
-        panel.border = 10
       
         vbox = wx.BoxSizer(wx.VERTICAL)
 
@@ -46,10 +45,6 @@ class windowclass(wx.Frame):
         hbox.Add(clear_button, 0, wx.EXPAND|wx.ALL, 10)
 
         vbox.Add(hbox, flag=wx.ALIGN_CENTER|wx.TOP, border=0)
-
-        self.status_text = wx.StaticText(panel, label="", style=wx.ALIGN_LEFT)
-        vbox.Add(self.status_text, flag=wx.EXPAND|wx.LEFT|wx.TOP, border=0)
-
 
          # 1. Instantiate the progress bar widget and its label
         self.gauge_label = wx.StaticText(panel, label="0%")
@@ -86,7 +81,7 @@ class windowclass(wx.Frame):
     def load_and_download(self, event):
         video_url = self.text_ctrl.GetValue().strip()
         if not video_url:
-            self.status_text.SetLabel("You must enter a URL.")
+            self.sb.SetStatusText("Error: You must enter a URL.")
             return
 
         #self.status_text.SetLabel("Downloading..."+ "\n")
